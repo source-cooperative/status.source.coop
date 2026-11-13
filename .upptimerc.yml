@@ -1,31 +1,57 @@
-# Change these first
-owner: upptime # Your GitHub organization or username, where this repository lives
-repo: upptime # The name of this repository
+# External monitoring and public status page for Source Cooperative.
+# Checks run from GitHub Actions every 5 minutes, outside Cloudflare, Vercel and
+# AWS, so they still work when any of those is down. Downtime opens an issue
+# here and notifies Slack; recovery closes it and notifies again.
+# Why this exists: data.source.coop ADR-015, M4.
+owner: source-cooperative
+repo: status.source.coop
+user-agent: source-cooperative-status
+
+# Only these secrets may be substituted into the config. GH_PAT is passed to the
+# workflows separately and is not listed.
+secrets:
+  - NOTIFICATION_SLACK
+  - NOTIFICATION_SLACK_WEBHOOK_URL
 
 sites:
-  - name: Google
-    url: https://www.google.com
-  - name: Wikipedia
-    url: https://en.wikipedia.org
-  - name: Hacker News
-    url: https://news.ycombinator.com
-  - name: Secret Site
-    url: $SECRET_SITE
+  - name: Website
+    url: https://source.coop/
+    maxResponseTime: 5000
+
+  # The data proxy Worker answers this itself, with no upstream calls: it fails
+  # only when Cloudflare or the Worker does.
+  - name: Data proxy
+    url: https://data.source.coop/
+    maxResponseTime: 5000
+    __dangerous__body_down_if_text_missing: "Source Cooperative Data Proxy"
+
+  # A real read through the proxy: Source API lookup, AWS credentials, S3.
+  - name: Data reads
+    url: https://data.source.coop/radiantearth/landcovernet/README.md
+    maxResponseTime: 5000
+    __dangerous__body_down_if_text_missing: "LandCoverNet"
+
+  # What S3 clients and the CLI discover before exchanging credentials at /.sts.
+  - name: Credential exchange
+    url: https://data.source.coop/.well-known/openid-configuration
+    maxResponseTime: 5000
+    __dangerous__body_down_if_text_missing: '"issuer"'
+
+  - name: Sign-in
+    url: https://auth.source.coop/.well-known/openid-configuration
+    maxResponseTime: 5000
+    __dangerous__body_down_if_text_missing: '"issuer"'
 
 status-website:
-  # Add your custom domain name, or remove the `cname` line if you don't have a domain
-  # Uncomment the `baseUrl` line if you don't have a custom domain and add your repo name there
-  cname: demo.upptime.js.org
-  # baseUrl: /your-repo-name
-  logoUrl: https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/icon.svg
-  name: Upptime
-  introTitle: "**Upptime** is the open-source uptime monitor and status page, powered entirely by GitHub."
-  introMessage: This is a sample status page which uses **real-time** data from our [GitHub repository](https://github.com/upptime/upptime). No server required — just GitHub Actions, Issues, and Pages. [**Get your own for free**](https://github.com/upptime/upptime)
+  cname: status.source.coop
+  logoUrl: https://source.coop/favicon/apple-touch-icon.png
+  name: Source Cooperative Status
+  introTitle: "**Source Cooperative** service status"
+  introMessage: Live availability of source.coop and its data service, checked every 5 minutes from outside our infrastructure.
   navbar:
     - title: Status
       href: /
+    - title: Source Cooperative
+      href: https://source.coop
     - title: GitHub
       href: https://github.com/$OWNER/$REPO
-
-# Upptime also supports notifications, assigning issues, and more
-# See https://upptime.js.org/docs/configuration
