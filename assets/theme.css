@@ -1,0 +1,46 @@
+/*
+ * Source Cooperative theme for Upptime, from ops-source brand/brand.json.
+ * Ink-on-Bone and near-monochrome: Grass marks only live/up status; warning
+ * and danger are the brand's provisional values. Tints are Ink or the status
+ * colours at low alpha, so no new hues are introduced.
+ */
+:root {
+  --ink: #121a1b;
+  --bone: #efebea;
+  --grass: #46a758;
+  --warning: #b87a00;
+  --danger: #c8261e;
+  --ink-line: rgba(18, 26, 27, 0.16);
+
+  --body-background-color: var(--bone);
+  --body-text-color: var(--ink);
+  --card-background-color: var(--bone);
+  --card-border-color: var(--ink-line);
+  --nav-background-color: var(--bone);
+  --nav-border-bottom-color: var(--ink-line);
+  --nav-current-border-bottom-color: var(--ink);
+
+  --up-border-left-color: var(--grass);
+  --degraded-border-left-color: var(--warning);
+  --down-border-left-color: var(--danger);
+  --down-background-color: rgba(200, 38, 30, 0.08);
+
+  --tag-color: var(--bone);
+  --tag-up-background-color: var(--grass);
+  --tag-degraded-background-color: var(--warning);
+  --tag-down-background-color: var(--danger);
+  --change-background-color: rgba(184, 122, 0, 0.16);
+
+  --error-button-border-color: var(--ink);
+  --error-button-background-color: var(--ink);
+  --error-button-color: var(--bone);
+  --submit-button-border-color: var(--ink);
+  --submit-button-background-color: var(--ink);
+  --submit-button-color: var(--bone);
+
+  --code-color: var(--ink);
+  --code-background-color: rgba(18, 26, 27, 0.06);
+
+  --graph-opacity: 1;
+  --graph-filter: none;
+}
