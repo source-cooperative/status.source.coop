@@ -1,0 +1,73 @@
+/*
+ * Source Cooperative typography for Upptime. Loaded after Upptime's global.css
+ * (via `links`), so these rules win over its defaults. Colours are in theme.css.
+ *
+ * Berkeley Mono is licensed: web surfaces load it from the Radiant Earth CDN
+ * and never commit the binaries. IBM Plex Sans comes from Google Fonts.
+ */
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("https://assets.radiant.earth/fonts/BerkeleyMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("https://assets.radiant.earth/fonts/BerkeleyMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Body: IBM Plex Sans 16px / 1.55 / 400 */
+body {
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+/* Display, headings, UI labels and technical content: Berkeley Mono */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+nav,
+.tag,
+dl dt,
+code,
+pre,
+button,
+.submit-button,
+a.error-button {
+  font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Links are Ink; interaction is underline and weight, never a colour shift. */
+a {
+  color: var(--ink);
+  text-underline-offset: 0.15em;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Status tags carry the only colour on the page: square them off and set
+   them in the UI face. */
+.tag {
+  border-radius: 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+article {
+  border-radius: 0;
+}
+
+/* The mark needs clear space of 0.6x its height (3rem tall in the nav). */
+nav .logo img {
+  margin-right: 1.8rem !important;
+}
