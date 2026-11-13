@@ -32,14 +32,21 @@
   // When monitoring of this site began; days before it have no data. Rejects
   // if the file can't be read, so the panel never presents unmonitored days
   // as fully up; Upptime's own summary stays in place instead.
-  const getStart = (slug) =>
-    fetch(`${RAW}/history/${slug}.yml`)
-      .then(ok)
-      .then((r) => r.text())
-      .then((t) => {
-        const m = t.match(/^startTime:\s*(\S+)/m);
-        return m ? new Date(m[1]) : null;
-      });
+  const starts = new Map();
+  const getStart = (slug) => {
+    if (!starts.has(slug)) {
+      const p = fetch(`${RAW}/history/${slug}.yml`)
+        .then(ok)
+        .then((r) => r.text())
+        .then((t) => {
+          const m = t.match(/^startTime:\s*(\S+)/m);
+          return m ? new Date(m[1]) : null;
+        });
+      p.catch(() => starts.delete(slug));
+      starts.set(slug, p);
+    }
+    return starts.get(slug);
+  };
 
   const formatDate = (d) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -47,10 +54,10 @@
   // One entry per UTC day, oldest first, ending today. Uptime is measured
   // against the minutes actually monitored, so today and the first day are
   // not diluted by hours that haven't happened or weren't checked.
-  function buildDays(site, start, now = new Date()) {
+  function buildDays(site, start, count = DAYS, now = new Date()) {
     const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    return Array.from({ length: DAYS }, (_, i) => {
-      const date = new Date(today - (DAYS - 1 - i) * DAY_MS);
+    return Array.from({ length: count }, (_, i) => {
+      const date = new Date(today - (count - 1 - i) * DAY_MS);
       const key = date.toISOString().slice(0, 10);
       const down = (site.dailyMinutesDown || {})[key] || 0;
       const known = !start || date.getTime() + DAY_MS > start.getTime();
@@ -74,28 +81,17 @@
     return box;
   }
 
-  function render(site, start) {
-    const days = buildDays(site, start);
-    const panel = el("div", "sc-panel");
-
-    const stats = el("div", "sc-stats");
-    stats.append(
-      stat("Uptime 24h", site.uptimeDay),
-      stat("Uptime 7d", site.uptimeWeek),
-      stat("Uptime 30d", site.uptimeMonth),
-      stat("Response 7d", `${site.timeWeek} ms`),
-    );
-    const statsRow = el("div", "sc-stat-row");
-    statsRow.append(stats);
-
+  // Caption, one bar per day and the date range, as in the analytics card.
+  // Hovering a bar turns it Grass and puts that day in the caption.
+  function uptimeChart(days) {
     const caption = el("div", "sc-caption");
     const swatch = el("span", "sc-swatch");
-    const captionText = el("span", "sc-label", `${DAYS}-day uptime`);
+    const captionText = el("span", "sc-label", `${days.length}-day uptime`);
     caption.append(swatch, captionText);
 
     const bars = el("div", "sc-bars");
     bars.setAttribute("role", "img");
-    bars.setAttribute("aria-label", `Daily uptime over the past ${DAYS} days`);
+    bars.setAttribute("aria-label", `Daily uptime over the past ${days.length} days`);
     days.forEach((day, i) => {
       const bar = el("div", "sc-bar");
       bar.dataset.index = i;
@@ -114,7 +110,7 @@
       hovered = i;
       if (i === null) {
         swatch.hidden = true;
-        captionText.textContent = `${DAYS}-day uptime`;
+        captionText.textContent = `${days.length}-day uptime`;
         return;
       }
       const day = days[i];
@@ -135,10 +131,27 @@
     const range = el("div", "sc-range");
     range.append(
       el("span", "sc-label", formatDate(days[0].date)),
-      el("span", "sc-label", formatDate(days[DAYS - 1].date)),
+      el("span", "sc-label", formatDate(days[days.length - 1].date)),
     );
 
-    panel.append(statsRow, caption, bars, range);
+    return [caption, bars, range];
+  }
+
+  function render(site, start) {
+    const days = buildDays(site, start);
+    const panel = el("div", "sc-panel");
+
+    const stats = el("div", "sc-stats");
+    stats.append(
+      stat("Uptime 24h", site.uptimeDay),
+      stat("Uptime 7d", site.uptimeWeek),
+      stat("Uptime 30d", site.uptimeMonth),
+      stat("Response 7d", `${site.timeWeek} ms`),
+    );
+    const statsRow = el("div", "sc-stat-row");
+    statsRow.append(stats);
+
+    panel.append(statsRow, ...uptimeChart(days));
     return panel;
   }
 
@@ -158,7 +171,30 @@
     dl.after(render(site, start));
   }
 
-  new MutationObserver(() => enhance().catch(() => {})).observe(document.documentElement, {
+  // Index cards: Upptime draws each site's response time as a teal PNG
+  // background (brand.css hides it); put a compact 30-day strip there instead.
+  function enhanceIndex() {
+    for (const card of document.querySelectorAll("section.live-status article:not([data-sc])")) {
+      const link = card.querySelector("h4 a[href*='/history/']");
+      if (!link) continue;
+      card.dataset.sc = "1";
+      const slug = decodeURIComponent(link.getAttribute("href").split("/history/")[1].replace(/\/$/, ""));
+      Promise.all([getSummaries(), getStart(slug)])
+        .then(([all, start]) => {
+          const site = all.find((s) => s.slug === slug);
+          if (!site || !card.isConnected) return;
+          const mini = el("div", "sc-mini");
+          mini.append(...uptimeChart(buildDays(site, start, 30)));
+          card.append(mini);
+        })
+        .catch(() => {});
+    }
+  }
+
+  new MutationObserver(() => {
+    enhanceIndex();
+    enhance().catch(() => {});
+  }).observe(document.documentElement, {
     childList: true,
     subtree: true,
   });
