@@ -42,6 +42,10 @@ sites:
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: '"issuer"'
 
+# Response-time chart on the history pages: Ink line on a faint Ink fill.
+graphBorderColor: "#121A1B"
+graphBackgroundColor: "rgba(18, 26, 27, 0.08)"
+
 # Styled from ops-source brand/brand.json. Files in assets/ are copied to the
 # site root at build time and served from status.source.coop. They are referenced
 # by absolute URL: the site generator follows relative links before assets/ is
@@ -61,6 +65,9 @@ status-website:
       href: https://status.source.coop/brand.css
     - rel: apple-touch-icon
       href: https://status.source.coop/apple-touch-icon.png
+  # Daily-uptime panel on each history page, like the source.coop analytics card.
+  scripts:
+    - src: https://status.source.coop/brand.js
   metaTags:
     - name: theme-color
       content: "#EFEBEA"
