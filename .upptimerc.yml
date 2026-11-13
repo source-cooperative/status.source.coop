@@ -43,23 +43,24 @@ sites:
     __dangerous__body_down_if_text_missing: '"issuer"'
 
 # Styled from ops-source brand/brand.json. Files in assets/ are copied to the
-# site root at build time, so /theme.css, /brand.css and the icons are served
-# from status.source.coop itself.
+# site root at build time and served from status.source.coop. They are referenced
+# by absolute URL: the site generator follows relative links before assets/ is
+# copied in, and a miss on /x.css leaves a directory that blocks the copy.
 status-website:
   cname: status.source.coop
-  logoUrl: /logomark.svg
+  logoUrl: https://status.source.coop/logomark.svg
   logoHref: https://source.coop
-  favicon: /favicon.ico
+  favicon: https://status.source.coop/favicon.ico
   name: Source Cooperative Status
   # Replaces Upptime's light/dark themes: Source's identity is light (Ink on Bone).
-  themeUrl: /theme.css
+  themeUrl: https://status.source.coop/theme.css
   links:
     - rel: stylesheet
       href: https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap
     - rel: stylesheet
-      href: /brand.css
+      href: https://status.source.coop/brand.css
     - rel: apple-touch-icon
-      href: /apple-touch-icon.png
+      href: https://status.source.coop/apple-touch-icon.png
   metaTags:
     - name: theme-color
       content: "#EFEBEA"
