@@ -159,3 +159,37 @@ nav .logo img {
   justify-content: space-between;
   margin-top: 4px;
 }
+
+/*
+ * Index cards: Upptime paints each site's response time as a teal PNG
+ * background. Hide it; brand.js adds a compact 30-day uptime strip in its
+ * place. The card's full-size link overlay (a::after) would swallow hover, so
+ * the strip sits above it.
+ */
+section.live-status article.graph {
+  background-image: none !important;
+}
+.sc-mini {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.75rem;
+}
+.sc-mini .sc-caption {
+  margin-top: 0;
+}
+.sc-mini .sc-bars {
+  height: 40px;
+}
+@media (min-width: 640px) {
+  section.live-status article.graph {
+    padding-right: calc(40% + 2.5rem);
+    min-height: 5.5rem;
+  }
+  .sc-mini {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    width: 40%;
+    margin-top: 0;
+  }
+}

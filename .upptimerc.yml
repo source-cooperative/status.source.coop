@@ -16,29 +16,34 @@ secrets:
 sites:
   - name: Website
     url: https://source.coop/
+    icon: https://source.coop/favicon/favicon.ico
     maxResponseTime: 5000
 
   # The data proxy Worker answers this itself, with no upstream calls: it fails
   # only when Cloudflare or the Worker does.
   - name: Data proxy
     url: https://data.source.coop/
+    icon: https://source.coop/favicon/favicon.ico
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: "Source Cooperative Data Proxy"
 
   # A real read through the proxy: Source API lookup, AWS credentials, S3.
   - name: Data reads
     url: https://data.source.coop/radiantearth/landcovernet/README.md
+    icon: https://source.coop/favicon/favicon.ico
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: "LandCoverNet"
 
   # What S3 clients and the CLI discover before exchanging credentials at /.sts.
   - name: Credential exchange
     url: https://data.source.coop/.well-known/openid-configuration
+    icon: https://source.coop/favicon/favicon.ico
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: '"issuer"'
 
   - name: Sign-in
     url: https://auth.source.coop/.well-known/openid-configuration
+    icon: https://source.coop/favicon/favicon.ico
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: '"issuer"'
 
