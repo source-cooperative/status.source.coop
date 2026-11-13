@@ -8,24 +8,45 @@
   const DAYS = 90;
   const DAY_MS = 864e5;
 
-  let summaries;
-  const getSummaries = () =>
-    (summaries ??= fetch(`${RAW}/history/summary.json`).then((r) => r.json()));
+  // raw.githubusercontent.com serves with max-age=300; refetch after that.
+  const CACHE_MS = 5 * 60e3;
 
-  // When monitoring of this site began; days before it have no data.
+  const ok = (r) => {
+    if (!r.ok) throw new Error(`${r.status} ${r.url}`);
+    return r;
+  };
+
+  // Shared across history pages in one tab. A failed fetch is dropped so the
+  // next page retries instead of inheriting the rejection.
+  let summaries, fetchedAt = 0;
+  const getSummaries = () => {
+    if (!summaries || Date.now() - fetchedAt > CACHE_MS) {
+      const p = fetch(`${RAW}/history/summary.json`).then(ok).then((r) => r.json());
+      p.catch(() => summaries === p && (summaries = undefined));
+      summaries = p;
+      fetchedAt = Date.now();
+    }
+    return summaries;
+  };
+
+  // When monitoring of this site began; days before it have no data. Rejects
+  // if the file can't be read, so the panel never presents unmonitored days
+  // as fully up; Upptime's own summary stays in place instead.
   const getStart = (slug) =>
     fetch(`${RAW}/history/${slug}.yml`)
+      .then(ok)
       .then((r) => r.text())
       .then((t) => {
         const m = t.match(/^startTime:\s*(\S+)/m);
         return m ? new Date(m[1]) : null;
-      })
-      .catch(() => null);
+      });
 
   const formatDate = (d) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
-  // One entry per UTC day, oldest first, ending today.
+  // One entry per UTC day, oldest first, ending today. Uptime is measured
+  // against the minutes actually monitored, so today and the first day are
+  // not diluted by hours that haven't happened or weren't checked.
   function buildDays(site, start, now = new Date()) {
     const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
     return Array.from({ length: DAYS }, (_, i) => {
@@ -33,7 +54,10 @@
       const key = date.toISOString().slice(0, 10);
       const down = (site.dailyMinutesDown || {})[key] || 0;
       const known = !start || date.getTime() + DAY_MS > start.getTime();
-      return { date, down, known, uptime: Math.max(0, 1 - down / 1440) };
+      const from = Math.max(date.getTime(), start ? start.getTime() : 0);
+      const to = Math.min(date.getTime() + DAY_MS, now.getTime());
+      const minutes = Math.max(1, (to - from) / 6e4);
+      return { date, down, known, uptime: Math.max(0, 1 - down / minutes) };
     });
   }
 

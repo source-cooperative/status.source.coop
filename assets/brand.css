@@ -43,7 +43,9 @@ code,
 pre,
 button,
 .submit-button,
-a.error-button {
+a.error-button,
+.sc-label,
+.sc-value {
   font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -81,7 +83,6 @@ nav .logo img {
   margin-bottom: 2rem;
 }
 .sc-label {
-  font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
   line-height: 1.4;
   text-transform: uppercase;
@@ -108,7 +109,6 @@ nav .logo img {
 }
 .sc-value {
   margin-top: 4px;
-  font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 16px;
   font-weight: 700;
   white-space: nowrap;
