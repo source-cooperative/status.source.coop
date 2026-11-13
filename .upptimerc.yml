@@ -42,10 +42,31 @@ sites:
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: '"issuer"'
 
+# Styled from ops-source brand/brand.json. Files in assets/ are copied to the
+# site root at build time, so /theme.css, /brand.css and the icons are served
+# from status.source.coop itself.
 status-website:
   cname: status.source.coop
-  logoUrl: https://source.coop/favicon/apple-touch-icon.png
+  logoUrl: /logomark.svg
+  logoHref: https://source.coop
+  favicon: /favicon.ico
   name: Source Cooperative Status
+  # Replaces Upptime's light/dark themes: Source's identity is light (Ink on Bone).
+  themeUrl: /theme.css
+  links:
+    - rel: stylesheet
+      href: https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap
+    - rel: stylesheet
+      href: /brand.css
+    - rel: apple-touch-icon
+      href: /apple-touch-icon.png
+  metaTags:
+    - name: theme-color
+      content: "#EFEBEA"
+    - name: color-scheme
+      content: light
+    - name: og:image
+      content: https://status.source.coop/og.png
   introTitle: "**Source Cooperative** service status"
   introMessage: Live availability of source.coop and its data service, checked every 5 minutes from outside our infrastructure.
   navbar:
