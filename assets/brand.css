@@ -71,3 +71,91 @@ article {
 nav .logo img {
   margin-right: 1.8rem !important;
 }
+
+/*
+ * Daily-uptime panel added by brand.js, laid out like the source.coop
+ * analytics UsagePanel: Radix gray-12 bars become Ink, green-9 hover Grass,
+ * gray-4 rules the Ink line, gray-10 labels Ink at reduced opacity.
+ */
+.sc-panel {
+  margin-bottom: 2rem;
+}
+.sc-label {
+  font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: rgba(18, 26, 27, 0.6);
+}
+/* Each stat carries its own left rule; the grid is pulled left and clipped
+   so the first stat of every row sits flush. */
+.sc-stat-row {
+  overflow: hidden;
+  margin-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.sc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  row-gap: 0.75rem;
+  margin-left: -13px;
+}
+.sc-stat {
+  padding-left: 12px;
+  border-left: 1px solid var(--ink-line);
+}
+.sc-value {
+  margin-top: 4px;
+  font-family: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sc-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0.75rem 0 0.5rem;
+}
+.sc-swatch {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: var(--grass);
+}
+.sc-swatch[hidden] {
+  display: none;
+}
+.sc-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 64px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sc-bar {
+  flex: 1;
+  height: 100%;
+  background: var(--ink);
+}
+.sc-bar.partial {
+  background: var(--warning);
+}
+.sc-bar.down {
+  background: var(--danger);
+}
+.sc-bar.nodata {
+  height: 2px;
+  background: var(--ink-line);
+}
+.sc-bar.hover {
+  background: var(--grass);
+}
+.sc-range {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}

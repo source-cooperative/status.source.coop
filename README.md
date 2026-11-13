@@ -53,6 +53,8 @@ This is the outside uptime check (M4) in [data.source.coop ADR-015](https://gith
 
 Edit `sites` in [`.upptimerc.yml`](.upptimerc.yml) and open a pull request; the next scheduled run picks up the change after merge. Prefer checks that need no credentials and touch objects Source controls. Use `__dangerous__body_down_if_text_missing` to assert on the response body, not only the status code.
 
+**Put `[skip ci]` in the message of every branch commit that changes `.upptimerc.yml`.** Upptime's Setup CI runs on any push that changes that file, on any branch. Without `[skip ci]` it runs every check on the branch, commits the results there, and deploys that branch to the live site. The merge commit on `master` has no `[skip ci]`, so the change still deploys once merged. Upptime regenerates its workflow files daily, so restricting the workflow to `master` wouldn't stick.
+
 To post an update during an incident, comment on its open issue.
 
 ## Styling
