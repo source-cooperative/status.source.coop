@@ -1,0 +1,58 @@
+name: Deploy scheduler (Cloudflare)
+
+# Deploys schedulers/cloudflare only when that directory (or this workflow)
+# changes. Pull requests run the tests and a dry-run build; merges to master
+# deploy the Worker.
+on:
+  push:
+    branches: [master]
+    paths:
+      - "schedulers/cloudflare/**"
+      - ".github/workflows/deploy-scheduler-cloudflare.yml"
+  pull_request:
+    paths:
+      - "schedulers/cloudflare/**"
+      - ".github/workflows/deploy-scheduler-cloudflare.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-scheduler-cloudflare
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: schedulers/cloudflare
+
+jobs:
+  worker:
+    name: ${{ github.event_name == 'pull_request' && 'Test' || 'Deploy' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: schedulers/cloudflare/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Dry-run build
+        if: github.event_name == 'pull_request'
+        run: npx wrangler deploy --dry-run
+
+      - name: Deploy
+        if: github.event_name != 'pull_request'
+        run: |
+          npx wrangler deploy
+          printf '%s' "$SCHEDULER_TOKEN" | npx wrangler secret put DISPATCH_TOKEN
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          SCHEDULER_TOKEN: ${{ secrets.SCHEDULER_TOKEN_CLOUDFLARE }}
