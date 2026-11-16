@@ -89,6 +89,9 @@
   const formatDate = (d) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
+  // Axis labels under the bars: "Aug 19", with the year left to the tooltips.
+  const formatShort = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
   const dayLabel = (day) =>
     !day.known
       ? `${formatDate(day.date)} · not monitored`
@@ -108,7 +111,7 @@
       const from = Math.max(date.getTime(), start ? start.getTime() : 0);
       const to = Math.min(date.getTime() + DAY_MS, now.getTime());
       const minutes = Math.max(1, (to - from) / 6e4);
-      return { date, down, known, uptime: Math.max(0, 1 - down / minutes) };
+      return { date, down, known, minutes, uptime: Math.max(0, 1 - down / minutes) };
     });
   }
 
@@ -130,7 +133,8 @@
   function uptimeChart(days) {
     const caption = el("div", "sc-caption");
     const swatch = el("span", "sc-swatch");
-    const captionText = el("span", "sc-label", `${days.length}-day uptime`);
+    const idle = `Daily uptime · ${days.length} days`;
+    const captionText = el("span", "sc-label", idle);
     caption.append(swatch, captionText);
 
     const bars = el("div", "sc-bars");
@@ -156,7 +160,7 @@
       hovered = i;
       if (i === null) {
         swatch.hidden = true;
-        captionText.textContent = `${days.length}-day uptime`;
+        captionText.textContent = idle;
         return;
       }
       const day = days[i];
@@ -173,8 +177,8 @@
 
     const range = el("div", "sc-range");
     range.append(
-      el("span", "sc-label", formatDate(days[0].date)),
-      el("span", "sc-label", formatDate(days[days.length - 1].date)),
+      el("span", "sc-label", formatShort(days[0].date)),
+      el("span", "sc-label", formatShort(days[days.length - 1].date)),
     );
 
     return [caption, bars, range];
@@ -185,11 +189,19 @@
     const panel = el("div", "sc-panel");
 
     const stats = el("div", "sc-stats");
+    // 90-day uptime over the minutes actually monitored; Upptime's summary
+    // has day, week, month and year, but no 90-day figure.
+    const seen = days.filter((d) => d.known);
+    const minutes = seen.reduce((sum, d) => sum + d.minutes, 0);
+    const down = seen.reduce((sum, d) => sum + d.down, 0);
+    const uptime90 = minutes ? `${(Math.max(0, 1 - down / minutes) * 100).toFixed(2)}%` : "–";
+    const ms = Number(site.timeWeek);
     stats.append(
-      stat("Uptime 24h", site.uptimeDay),
-      stat("Uptime 7d", site.uptimeWeek),
-      stat("Uptime 30d", site.uptimeMonth),
-      stat("Response 7d", `${site.timeWeek} ms`),
+      stat("24h", site.uptimeDay),
+      stat("7 days", site.uptimeWeek),
+      stat("30 days", site.uptimeMonth),
+      stat("90 days", uptime90),
+      stat("Avg response 7d", Number.isFinite(ms) ? `${Math.round(ms).toLocaleString("en-US")} ms` : "–"),
     );
     const statsRow = el("div", "sc-stat-row");
     statsRow.append(stats);
@@ -212,6 +224,27 @@
     if (!site || !dl.isConnected) return;
     dl.hidden = true;
     dl.after(render(site, start));
+
+    // Breadcrumb above the name, and the checked URL under it.
+    const section = dl.closest("section");
+    const h1 = section.querySelector("h1");
+    const name = h1.querySelector("a")?.textContent.trim() || site.name;
+    const crumb = el("div", "sc-crumb");
+    const home = el("a", "", "Status");
+    home.href = "/";
+    crumb.append(home, ` / ${name}`);
+    section.before(crumb);
+    const url = el("div", "sc-sub", site.url);
+    h1.after(url);
+  }
+
+  // The chart section renders after the summary, so it is relabelled on its
+  // own: "7-day response time" becomes the analytics panel's label style.
+  function enhanceChartLabel() {
+    const h2 = document.querySelector("main section > h2:not([data-sc])");
+    if (!h2 || !/response time/i.test(h2.textContent)) return;
+    h2.dataset.sc = "1";
+    h2.textContent = "Response time · 7 days";
   }
 
   // Index cards: Upptime draws each site's response time as a teal PNG
@@ -310,6 +343,7 @@
     enhanceBanner();
     enhanceHeader();
     enhanceLabel();
+    enhanceChartLabel();
     enhanceFooter();
     enhanceIndex();
     enhance().catch(() => {});
