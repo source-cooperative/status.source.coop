@@ -61,7 +61,7 @@ a:hover {
 /* Status tags carry the only colour on the page: square them off and set
    them in the UI face. */
 .tag {
-  border-radius: 0;
+  border-radius: 4px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -93,9 +93,7 @@ nav .logo img {
    so the first stat of every row sits flush. */
 .sc-stat-row {
   overflow: hidden;
-  margin-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--ink-line);
+  margin-top: 1rem;
 }
 .sc-stats {
   display: grid;
@@ -109,7 +107,7 @@ nav .logo img {
 }
 .sc-value {
   margin-top: 4px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -117,7 +115,7 @@ nav .logo img {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0.75rem 0 0.5rem;
+  margin: 1.75rem 0 0.5rem;
 }
 .sc-swatch {
   width: 8px;
@@ -132,7 +130,7 @@ nav .logo img {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 64px;
+  height: 72px;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -140,6 +138,7 @@ nav .logo img {
   flex: 1;
   height: 100%;
   background: var(--ink);
+  border-radius: 1px;
 }
 .sc-bar.partial {
   background: var(--warning);
@@ -147,8 +146,10 @@ nav .logo img {
 .sc-bar.down {
   background: var(--danger);
 }
+/* Days before monitoring began: a faint full-height placeholder, so the strip
+   always spans the whole range. */
 .sc-bar.nodata {
-  height: 2px;
+  height: 100%;
   background: var(--ink-line);
 }
 .sc-bar.hover {
@@ -180,16 +181,86 @@ section.live-status article.graph {
 .sc-mini .sc-bars {
   height: 40px;
 }
-@media (min-width: 640px) {
+/*
+ * Each check is one row: name over URL, a strip, 30-day uptime and the 24h
+ * average response. Upptime's own two text lines are hidden. Phones stack the
+ * strip under the name.
+ */
+section.live-status article.graph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "name up ms"
+    "sub up ms"
+    "strip strip strip";
+  align-items: center;
+  gap: 0 20px;
+  padding: 14px 20px;
+}
+section.live-status article.graph h4 {
+  grid-area: name;
+  align-self: end;
+  margin: 0;
+}
+section.live-status article.graph > div:not(.sc-mini):not(.sc-num):not(.sc-sub) {
+  display: none;
+}
+.sc-sub {
+  grid-area: sub;
+  align-self: start;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-num {
+  align-self: center;
+  min-width: 4.5rem;
+  text-align: right;
+  white-space: nowrap;
+  font: 700 15px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.sc-num small {
+  display: block;
+  font: 400 12px "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--muted);
+}
+.sc-up {
+  grid-area: up;
+}
+.sc-ms {
+  grid-area: ms;
+}
+.sc-mini {
+  grid-area: strip;
+  margin-top: 12px;
+}
+.sc-mini .sc-caption,
+.sc-mini .sc-range {
+  display: none;
+}
+.sc-mini .sc-bars {
+  height: 32px;
+}
+.sc-mini .sc-bar {
+  border-radius: 1px;
+}
+/* Days before monitoring began: a quiet full-height placeholder, not a dash. */
+.sc-mini .sc-bar.nodata {
+  height: 100%;
+  opacity: 0.5;
+}
+@media (min-width: 720px) {
   section.live-status article.graph {
-    padding-right: calc(40% + 2.5rem);
-    min-height: 5.5rem;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.5fr) 4.5rem 4.5rem;
+    grid-template-areas:
+      "name strip up ms"
+      "sub strip up ms";
   }
   .sc-mini {
-    position: absolute;
-    top: 1rem;
-    right: 1.25rem;
-    width: 40%;
     margin-top: 0;
   }
 }
@@ -199,8 +270,57 @@ section.live-status article.graph {
  * panels with 8px corners, and one list of checks instead of separate cards.
  * Status is a dot, not a coloured edge, so the only colour is the state.
  */
+/* Slim header, as on the CLI guide: 12px of padding round a 26px mark, small
+   links on the right. Upptime's own rules are class-hashed, so !important. */
+nav {
+  padding: 0 24px !important;
+  margin-bottom: 2rem !important;
+  font-weight: 400;
+}
+nav .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 0;
+}
+nav .logo {
+  padding: 0 !important;
+  margin-right: 0 !important;
+}
+nav ul {
+  gap: 6px;
+  margin-left: auto !important;
+}
+.sc-theme {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sc-theme:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.sc-theme:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+nav ul a {
+  padding: 6px 10px !important;
+  font-size: 14px;
+  border-bottom: 0 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 0.15em;
+}
 nav .logo img {
-  height: 26px;
+  height: 26px !important;
   width: auto;
   margin-right: 14px !important;
   filter: var(--logo-filter);
@@ -216,6 +336,20 @@ main h1 {
 }
 main .lead {
   color: var(--muted);
+}
+.sc-banner-text b {
+  display: block;
+  font-size: 18px;
+}
+.sc-banner-text small {
+  display: block;
+  margin-top: 2px;
+  font: 400 14px "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--muted);
+}
+/* The 24h/7d/30d filter only changed text the rows no longer show. */
+.f form {
+  display: none;
 }
 
 /* Overall status banner. brand.js swaps its emoji for .sc-dot. */
@@ -272,12 +406,48 @@ section.live-status article.down h4::before {
 }
 
 /* Section label, like the sc-label on the analytics panel. */
-.f h2 {
+.f h2,
+main section > h2 {
   font-size: 12px;
   line-height: 1.4;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted);
+}
+
+/* Short pages still reach the viewport's height, so the footer sits at the
+   bottom. Upptime pads the body's bottom, which would leave a gap under it. */
+body {
+  padding-bottom: 0;
+}
+#sapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+#sapper > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+/* Footer: a rule across the page, credit left, what the checks run on right. */
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-top: 3rem;
+  /* Content lines up with the header's: 24px gutter, 1200px max, centred. */
+  padding: 16px max(24px, calc((100% - 1200px) / 2));
+  border-top: 1px solid var(--ink-line);
+  font-size: 13px;
+  text-align: left;
+  color: var(--muted);
+}
+footer a {
+  color: inherit;
 }
 
 /* The checks: one bordered list, a divider between rows. */
@@ -307,4 +477,50 @@ section.live-status article h4 {
 /* The dot carries status; the favicon repeated on every row is noise. */
 section.live-status article h4 .icon {
   display: none;
+}
+
+/* History pages: the response-time chart is a canvas drawn with a fixed Ink
+   line (graphBorderColor), which vanishes on the dark background. Inverting
+   the canvas in dark turns Ink to Bone and leaves the grey labels readable. */
+main section > canvas {
+  filter: var(--chart-filter, none);
+}
+
+/* Per-service page: breadcrumb and checked URL around the name, and a spaced
+   "Response time" section. */
+.sc-crumb {
+  margin-bottom: 0.5rem;
+  font: 14px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--muted);
+}
+.sc-crumb a {
+  color: inherit;
+}
+main section .sc-sub {
+  margin: -0.25rem 0 0;
+}
+main section > h2 {
+  margin-top: 1.75rem;
+}
+
+/* Incidents: Upptime leaves this section empty when there are none. Give it
+   the label and a quiet empty state; incidents it fills in keep its markup. */
+main > section:last-child:empty::before {
+  content: "Incidents";
+  display: block;
+  margin: 1.75rem 0 0.5rem;
+  font: 700 12px/1.4 "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+main > section:last-child:empty::after {
+  content: "No incidents reported.";
+  display: block;
+  padding: 14px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 14px;
+  color: var(--muted);
 }
