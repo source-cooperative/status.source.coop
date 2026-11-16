@@ -84,8 +84,6 @@ status-website:
   introTitle: "**Source Cooperative** service status"
   introMessage: Live availability of source.coop and its data service, checked every 5 minutes from outside our infrastructure.
   navbar:
-    - title: Status
-      href: /
     - title: Source Cooperative
       href: https://source.coop
     - title: GitHub
