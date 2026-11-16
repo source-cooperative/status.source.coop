@@ -436,7 +436,8 @@ footer {
   justify-content: space-between;
   gap: 8px 20px;
   margin-top: 3rem;
-  padding: 16px 24px;
+  /* Content lines up with the header's: 24px gutter, 1200px max, centred. */
+  padding: 16px max(24px, calc((100% - 1200px) / 2));
   border-top: 1px solid var(--ink-line);
   font-size: 13px;
   text-align: left;
