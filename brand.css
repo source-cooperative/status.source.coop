@@ -61,7 +61,7 @@ a:hover {
 /* Status tags carry the only colour on the page: square them off and set
    them in the UI face. */
 .tag {
-  border-radius: 0;
+  border-radius: 4px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -93,9 +93,7 @@ nav .logo img {
    so the first stat of every row sits flush. */
 .sc-stat-row {
   overflow: hidden;
-  margin-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--ink-line);
+  margin-top: 1rem;
 }
 .sc-stats {
   display: grid;
@@ -109,7 +107,7 @@ nav .logo img {
 }
 .sc-value {
   margin-top: 4px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -117,7 +115,7 @@ nav .logo img {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0.75rem 0 0.5rem;
+  margin: 1.75rem 0 0.5rem;
 }
 .sc-swatch {
   width: 8px;
@@ -132,7 +130,7 @@ nav .logo img {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 64px;
+  height: 72px;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -140,6 +138,7 @@ nav .logo img {
   flex: 1;
   height: 100%;
   background: var(--ink);
+  border-radius: 1px;
 }
 .sc-bar.partial {
   background: var(--warning);
@@ -147,8 +146,10 @@ nav .logo img {
 .sc-bar.down {
   background: var(--danger);
 }
+/* Days before monitoring began: a faint full-height placeholder, so the strip
+   always spans the whole range. */
 .sc-bar.nodata {
-  height: 2px;
+  height: 100%;
   background: var(--ink-line);
 }
 .sc-bar.hover {
@@ -287,6 +288,29 @@ nav .logo {
 }
 nav ul {
   gap: 6px;
+  margin-left: auto !important;
+}
+.sc-theme {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sc-theme:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.sc-theme:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 nav ul a {
   padding: 6px 10px !important;
@@ -382,9 +406,11 @@ section.live-status article.down h4::before {
 }
 
 /* Section label, like the sc-label on the analytics panel. */
-.f h2 {
+.f h2,
+main section > h2 {
   font-size: 12px;
   line-height: 1.4;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted);
@@ -413,7 +439,8 @@ footer {
   justify-content: space-between;
   gap: 8px 20px;
   margin-top: 3rem;
-  padding: 16px 24px;
+  /* Content lines up with the header's: 24px gutter, 1200px max, centred. */
+  padding: 16px max(24px, calc((100% - 1200px) / 2));
   border-top: 1px solid var(--ink-line);
   font-size: 13px;
   text-align: left;
@@ -450,4 +477,50 @@ section.live-status article h4 {
 /* The dot carries status; the favicon repeated on every row is noise. */
 section.live-status article h4 .icon {
   display: none;
+}
+
+/* History pages: the response-time chart is a canvas drawn with a fixed Ink
+   line (graphBorderColor), which vanishes on the dark background. Inverting
+   the canvas in dark turns Ink to Bone and leaves the grey labels readable. */
+main section > canvas {
+  filter: var(--chart-filter, none);
+}
+
+/* Per-service page: breadcrumb and checked URL around the name, and a spaced
+   "Response time" section. */
+.sc-crumb {
+  margin-bottom: 0.5rem;
+  font: 14px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--muted);
+}
+.sc-crumb a {
+  color: inherit;
+}
+main section .sc-sub {
+  margin: -0.25rem 0 0;
+}
+main section > h2 {
+  margin-top: 1.75rem;
+}
+
+/* Incidents: Upptime leaves this section empty when there are none. Give it
+   the label and a quiet empty state; incidents it fills in keep its markup. */
+main > section:last-child:empty::before {
+  content: "Incidents";
+  display: block;
+  margin: 1.75rem 0 0.5rem;
+  font: 700 12px/1.4 "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+main > section:last-child:empty::after {
+  content: "No incidents reported.";
+  display: block;
+  padding: 14px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 14px;
+  color: var(--muted);
 }
