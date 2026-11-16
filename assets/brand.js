@@ -19,16 +19,17 @@
   const theme = () => root.dataset.theme || (dark.matches ? "dark" : "light");
 
   // The history page's response-time chart (Chart.js 2) fixes its aspect ratio
-  // from the canvas's starting size, which Upptime leaves at 400px tall; the
-  // mockup's chart is low. Start it shorter, as Chart.js first reads the canvas.
-  // Narrow containers get a taller start, since the height scales with width.
-  // The site has one canvas, so this needs no further targeting.
+  // from the canvas's starting size, which Upptime leaves at 400px tall. That
+  // is much taller than the rest of the page wants, so start it shorter, as
+  // Chart.js first reads the canvas. Narrow containers get a taller start,
+  // since the height scales with width. The site has one canvas, so this
+  // needs no further targeting.
   const getContext = HTMLCanvasElement.prototype.getContext;
   HTMLCanvasElement.prototype.getContext = function (...args) {
     if (!this.dataset.sc) {
       this.dataset.sc = "1";
       const width = this.parentNode?.clientWidth || 736;
-      this.setAttribute("height", width < 600 ? "220" : "190");
+      this.setAttribute("height", width < 600 ? "160" : "120");
     }
     return getContext.apply(this, args);
   };
