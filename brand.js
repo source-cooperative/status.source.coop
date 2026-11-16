@@ -51,6 +51,12 @@
   const formatDate = (d) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
+  const dayLabel = (day) =>
+    !day.known
+      ? `${formatDate(day.date)} · not monitored`
+      : `${formatDate(day.date)} · ${(day.uptime * 100).toFixed(2)}% up` +
+        (day.down ? ` · ${day.down} min down` : "");
+
   // One entry per UTC day, oldest first, ending today. Uptime is measured
   // against the minutes actually monitored, so today and the first day are
   // not diluted by hours that haven't happened or weren't checked.
@@ -101,6 +107,8 @@
         if (day.down >= 60) bar.classList.add("down");
         else if (day.down > 0) bar.classList.add("partial");
       }
+      // Native tooltip: the index strips hide the caption, so hover needs this.
+      bar.title = dayLabel(day);
       bars.append(bar);
     });
 
@@ -116,10 +124,7 @@
       const day = days[i];
       bars.children[i].classList.add("hover");
       swatch.hidden = false;
-      captionText.textContent = !day.known
-        ? `${formatDate(day.date)} · not monitored`
-        : `${formatDate(day.date)} · ${(day.uptime * 100).toFixed(2)}% up` +
-          (day.down ? ` · ${day.down} min down` : "");
+      captionText.textContent = dayLabel(day);
     };
     show(null);
     bars.addEventListener("mouseover", (e) => {
@@ -183,9 +188,27 @@
         .then(([all, start]) => {
           const site = all.find((s) => s.slug === slug);
           if (!site || !card.isConnected) return;
+          // Row: name over URL, strip, 30-day uptime, 24h average response.
+          // brand.css lays these out and hides Upptime's own text lines.
           const mini = el("div", "sc-mini");
           mini.append(...uptimeChart(buildDays(site, start, 30)));
-          card.append(mini);
+          let where = site.url;
+          try {
+            const u = new URL(site.url);
+            where = u.host + (u.pathname === "/" ? "" : u.pathname);
+          } catch {}
+          const num = (cls, value, label) => {
+            const box = el("div", `sc-num ${cls}`, value);
+            box.append(el("small", "", label));
+            return box;
+          };
+          const ms = Number(site.timeDay);
+          card.querySelector("h4").after(el("div", "sc-sub", where));
+          card.append(
+            mini,
+            num("sc-up", site.uptimeMonth, "30 days"),
+            num("sc-ms", Number.isFinite(ms) ? `${Math.round(ms).toLocaleString("en-US")} ms` : "–", "24h avg"),
+          );
         })
         .catch(() => {});
     }
@@ -198,11 +221,38 @@
     if (!banner) return;
     banner.dataset.sc = "1";
     const text = banner.textContent.replace(/^[^\p{L}]+/u, "").trim();
-    if (text) banner.replaceChildren(el("span", "sc-dot"), el("span", "", text));
+    if (!text) return;
+    // The intro paragraph moves into the banner; the page title goes.
+    const lead = document.querySelector("main > header .lead");
+    const body = el("div", "sc-banner-text");
+    body.append(el("b", "", text));
+    if (lead) body.append(el("small", "", lead.textContent));
+    banner.replaceChildren(el("span", "sc-dot"), body);
+    const header = document.querySelector("main > header");
+    if (header) header.hidden = true;
+  }
+
+  // Header: the mark, a divider and a plain "Status".
+  function enhanceHeader() {
+    const name = document.querySelector("nav .logo div:not([data-sc])");
+    if (!name) return;
+    name.dataset.sc = "1";
+    name.textContent = "Status";
+  }
+
+  // Section label for the list; the 24h/7d/30d filter only changed the text
+  // Upptime's cards show, which the rows replace.
+  function enhanceLabel() {
+    const h2 = document.querySelector("main .f h2:not([data-sc])");
+    if (!h2) return;
+    h2.dataset.sc = "1";
+    h2.textContent = "Services · last 30 days";
   }
 
   new MutationObserver(() => {
     enhanceBanner();
+    enhanceHeader();
+    enhanceLabel();
     enhanceIndex();
     enhance().catch(() => {});
   }).observe(document.documentElement, {

@@ -180,16 +180,86 @@ section.live-status article.graph {
 .sc-mini .sc-bars {
   height: 40px;
 }
-@media (min-width: 640px) {
+/*
+ * Each check is one row: name over URL, a strip, 30-day uptime and the 24h
+ * average response. Upptime's own two text lines are hidden. Phones stack the
+ * strip under the name.
+ */
+section.live-status article.graph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "name up ms"
+    "sub up ms"
+    "strip strip strip";
+  align-items: center;
+  gap: 0 20px;
+  padding: 14px 20px;
+}
+section.live-status article.graph h4 {
+  grid-area: name;
+  align-self: end;
+  margin: 0;
+}
+section.live-status article.graph > div:not(.sc-mini):not(.sc-num):not(.sc-sub) {
+  display: none;
+}
+.sc-sub {
+  grid-area: sub;
+  align-self: start;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-num {
+  align-self: center;
+  min-width: 4.5rem;
+  text-align: right;
+  white-space: nowrap;
+  font: 700 15px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.sc-num small {
+  display: block;
+  font: 400 12px "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--muted);
+}
+.sc-up {
+  grid-area: up;
+}
+.sc-ms {
+  grid-area: ms;
+}
+.sc-mini {
+  grid-area: strip;
+  margin-top: 12px;
+}
+.sc-mini .sc-caption,
+.sc-mini .sc-range {
+  display: none;
+}
+.sc-mini .sc-bars {
+  height: 32px;
+}
+.sc-mini .sc-bar {
+  border-radius: 1px;
+}
+/* Days before monitoring began: a quiet full-height placeholder, not a dash. */
+.sc-mini .sc-bar.nodata {
+  height: 100%;
+  opacity: 0.5;
+}
+@media (min-width: 720px) {
   section.live-status article.graph {
-    padding-right: calc(40% + 2.5rem);
-    min-height: 5.5rem;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.5fr) 4.5rem 4.5rem;
+    grid-template-areas:
+      "name strip up ms"
+      "sub strip up ms";
   }
   .sc-mini {
-    position: absolute;
-    top: 1rem;
-    right: 1.25rem;
-    width: 40%;
     margin-top: 0;
   }
 }
@@ -216,6 +286,20 @@ main h1 {
 }
 main .lead {
   color: var(--muted);
+}
+.sc-banner-text b {
+  display: block;
+  font-size: 18px;
+}
+.sc-banner-text small {
+  display: block;
+  margin-top: 2px;
+  font: 400 14px "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--muted);
+}
+/* The 24h/7d/30d filter only changed text the rows no longer show. */
+.f form {
+  display: none;
 }
 
 /* Overall status banner. brand.js swaps its emoji for .sc-dot. */
