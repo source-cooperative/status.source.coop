@@ -191,7 +191,18 @@
     }
   }
 
+  // Overall status banner: Upptime prefixes its message with an emoji; drop it
+  // for a status dot (brand.css colours it by the banner's up/degraded/down).
+  function enhanceBanner() {
+    const banner = document.querySelector("main > article:not([data-sc])");
+    if (!banner) return;
+    banner.dataset.sc = "1";
+    const text = banner.textContent.replace(/^[^\p{L}]+/u, "").trim();
+    if (text) banner.replaceChildren(el("span", "sc-dot"), el("span", "", text));
+  }
+
   new MutationObserver(() => {
+    enhanceBanner();
     enhanceIndex();
     enhance().catch(() => {});
   }).observe(document.documentElement, {
