@@ -46,9 +46,10 @@ export async function dispatch(env, fetchImpl = fetch) {
 }
 
 export default {
-  async scheduled(_controller, env, ctx) {
-    // A thrown error is recorded as a failed invocation in Workers logs/metrics.
-    ctx.waitUntil(dispatch(env));
+  async scheduled(_controller, env) {
+    // Awaited (not waitUntil) so a thrown error fails the cron invocation in
+    // Workers logs/metrics instead of only surfacing as a background exception.
+    await dispatch(env);
   },
 
   // No public surface: this Worker only runs on its cron trigger.

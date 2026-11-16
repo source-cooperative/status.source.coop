@@ -19,8 +19,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-scheduler-cloudflare
-  cancel-in-progress: false
+  # PR runs get their own group so they cannot displace a queued master deploy.
+  group: deploy-scheduler-cloudflare-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -48,7 +49,7 @@ jobs:
         run: npx wrangler deploy --dry-run
 
       - name: Deploy
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         run: |
           npx wrangler deploy
           printf '%s' "$SCHEDULER_TOKEN" | npx wrangler secret put DISPATCH_TOKEN

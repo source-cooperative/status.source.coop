@@ -19,8 +19,9 @@ permissions:
   id-token: write # OIDC to AWS; no long-lived AWS keys
 
 concurrency:
-  group: deploy-scheduler-aws
-  cancel-in-progress: false
+  # PR plans get their own group so they cannot displace a queued master apply.
+  group: deploy-scheduler-aws-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -64,5 +65,5 @@ jobs:
         run: terraform plan -input=false -out=tfplan
 
       - name: Apply
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         run: terraform apply -input=false tfplan

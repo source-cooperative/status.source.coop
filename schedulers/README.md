@@ -9,7 +9,7 @@ Upptime's recommended fix is an external scheduler that calls the GitHub `workfl
 | `schedulers/aws` | EventBridge rule, API destination (no Lambda) | 0, 5, 10, … | Terraform |
 | `schedulers/cloudflare` | Worker cron trigger | 2, 7, 12, … | Wrangler |
 
-While both are healthy a check starts about every 2.5 minutes. Extra dispatches are harmless: the Upptime workflow queues runs rather than cancelling them, and Actions minutes are free on public repos.
+While both are healthy a check starts about every 2.5 minutes. Extra dispatches are harmless: the Upptime workflow serialises runs (a concurrency group with `cancel-in-progress: false`; at most one waits, extras are dropped), and Actions minutes are free on public repos.
 
 Both exist to keep the status page independent of the things it monitors, so each is its own failure domain. Keep the AWS region off the one that hosts the data being monitored.
 
@@ -26,7 +26,7 @@ Both also have `workflow_dispatch` for a manual run.
 
 ### Dispatch tokens
 
-Create one fine-grained personal access token per provider, so one leaking or expiring breaks only one trigger. Scope each to this repository only, with **Actions: read and write**. Set an expiry and put the date in a calendar: an expired token fails silently from the status page's point of view.
+Create one fine-grained personal access token per provider, so one leaking or expiring breaks only one trigger. Scope each to this repository only, with **Actions: read and write**. Set an expiry and put the date in a calendar: an expired token fails silently from the status page's point of view. The deploy workflows only run when their directory changes, so after rotating a token secret, re-run the matching workflow with `workflow_dispatch` on `master` to push it out.
 
 Repository **secrets**: `SCHEDULER_TOKEN_AWS`, `SCHEDULER_TOKEN_CLOUDFLARE`.
 
