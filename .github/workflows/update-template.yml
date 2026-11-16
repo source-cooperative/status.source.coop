@@ -14,10 +14,12 @@
 # * More by Anand Chowdhary: https://anandchowdhary.com
 
 
+# Source Cooperative edit: no daily schedule. This job regenerates every Upptime
+# workflow, site.yml included, and would undo that file's master-only deploy
+# guard. Run it by hand (Actions, "Update Template CI") when an Upptime upgrade
+# is wanted, then re-apply the edit noted at the top of site.yml.
 name: Update Template CI
 on:
-  schedule:
-    - cron: "0 0 * * *"
   repository_dispatch:
     types: [update_template]
   workflow_dispatch:

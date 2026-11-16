@@ -14,9 +14,17 @@
 # * More by Anand Chowdhary: https://anandchowdhary.com
 
 
+# Source Cooperative edit: deploy only from master. Upptime's template runs this
+# on a push to any branch, builds that branch and publishes it to GitHub Pages,
+# so an unmerged PR could change the live site. The branch filter stops the run
+# from starting and the job's ref check covers workflow_dispatch from a branch.
+# The template updater rewrites this file, so update-template.yml no longer runs
+# on a schedule; after a manual update, put these edits back.
 name: Static Site CI
 on:
   push:
+    branches:
+      - master
     paths:
       - "assets/**"
   schedule:
@@ -31,7 +39,7 @@ jobs:
   release:
     name: Build and deploy site
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
     steps:
