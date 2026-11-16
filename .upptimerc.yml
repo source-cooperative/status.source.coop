@@ -61,7 +61,8 @@ status-website:
   logoHref: https://source.coop
   favicon: https://status.source.coop/favicon.ico
   name: Source Cooperative Status
-  # Replaces Upptime's light/dark themes: Source's identity is light (Ink on Bone).
+  # Replaces Upptime's themes: Ink on Bone, with a dark palette that follows the
+  # system setting (see theme.css).
   themeUrl: https://status.source.coop/theme.css
   links:
     - rel: stylesheet
@@ -77,7 +78,7 @@ status-website:
     - name: theme-color
       content: "#EFEBEA"
     - name: color-scheme
-      content: light
+      content: light dark
     - name: og:image
       content: https://status.source.coop/og.png
   introTitle: "**Source Cooperative** service status"

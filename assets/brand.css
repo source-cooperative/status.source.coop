@@ -87,7 +87,7 @@ nav .logo img {
   line-height: 1.4;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: rgba(18, 26, 27, 0.6);
+  color: var(--muted);
 }
 /* Each stat carries its own left rule; the grid is pulled left and clipped
    so the first stat of every row sits flush. */
@@ -192,4 +192,119 @@ section.live-status article.graph {
     width: 40%;
     margin-top: 0;
   }
+}
+
+/*
+ * Page layout in the style of cli.source.coop: a slim header, flat bordered
+ * panels with 8px corners, and one list of checks instead of separate cards.
+ * Status is a dot, not a coloured edge, so the only colour is the state.
+ */
+nav .logo img {
+  height: 26px;
+  width: auto;
+  margin-right: 14px !important;
+  filter: var(--logo-filter);
+}
+nav .logo div {
+  padding-left: 14px;
+  border-left: 1px solid var(--ink-line);
+  font-size: 14px;
+}
+main h1 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+main .lead {
+  color: var(--muted);
+}
+
+/* Overall status banner. brand.js swaps its emoji for .sc-dot. */
+main > article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: var(--panel);
+  font: 700 18px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+/* Upptime forces its left edge colour with !important; match it. */
+main > article.up,
+main > article.degraded,
+main > article.down {
+  border-width: 1px;
+}
+main > article.up {
+  border-color: var(--ink-line);
+  border-left-color: var(--ink-line) !important;
+}
+main > article.degraded {
+  border-color: var(--warning);
+  border-left-color: var(--warning) !important;
+}
+main > article.down {
+  border-color: var(--danger);
+  border-left-color: var(--danger) !important;
+  background: var(--down-background-color);
+}
+section.live-status article h4::before {
+  content: "";
+}
+.sc-dot,
+section.live-status article h4::before {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--grass);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--grass) 25%, transparent);
+}
+article.degraded .sc-dot,
+section.live-status article.degraded h4::before {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning) 25%, transparent);
+}
+article.down .sc-dot,
+section.live-status article.down h4::before {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+/* Section label, like the sc-label on the analytics panel. */
+.f h2 {
+  font-size: 12px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* The checks: one bordered list, a divider between rows. */
+section.live-status {
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+section.live-status article {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--ink-line);
+  background-color: transparent;
+}
+section.live-status article:first-child {
+  border-top: 0;
+}
+section.live-status article:hover {
+  background-color: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+section.live-status article h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* The dot carries status; the favicon repeated on every row is noise. */
+section.live-status article h4 .icon {
+  display: none;
 }
