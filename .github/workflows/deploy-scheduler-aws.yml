@@ -1,0 +1,82 @@
+name: Deploy scheduler (AWS)
+
+# Deploys schedulers/aws only when that directory (or this workflow) changes.
+# Pull requests get a plan; merges to master apply it.
+on:
+  push:
+    branches: [master]
+    paths:
+      - "schedulers/aws/**"
+      - "schedulers/shared/**"
+      - ".github/workflows/deploy-scheduler-aws.yml"
+  pull_request:
+    paths:
+      - "schedulers/aws/**"
+      - "schedulers/shared/**"
+      - ".github/workflows/deploy-scheduler-aws.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC to AWS; no long-lived AWS keys
+
+concurrency:
+  # PR plans get their own group so they cannot displace a queued master apply.
+  group: deploy-scheduler-aws-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: schedulers/aws
+
+jobs:
+  terraform:
+    name: ${{ github.event_name == 'pull_request' && 'Plan' || 'Apply' }}
+    runs-on: ubuntu-latest
+    # Fork PRs have no access to secrets or the AWS role.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      TF_VAR_app_client_id: ${{ vars.GH_APP_ID }}
+      TF_VAR_app_installation_id: ${{ vars.GH_APP_INSTALLATION_ID }}
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      # GitHub issues PKCS#1 keys; the Lambda's Web Crypto needs PKCS#8.
+      - name: Prepare App key
+        run: |
+          printf '%s' "$GH_APP_PRIVATE_KEY" | openssl pkcs8 -topk8 -nocrypt > "$RUNNER_TEMP/app.pem"
+          echo "TF_VAR_app_private_key<<EOF_KEY" >> "$GITHUB_ENV"
+          cat "$RUNNER_TEMP/app.pem" >> "$GITHUB_ENV"
+          echo "EOF_KEY" >> "$GITHUB_ENV"
+        env:
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.SCHEDULER_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.SCHEDULER_TF_STATE_REGION }}
+
+      - name: Format check
+        run: terraform fmt -check -diff
+
+      - name: Init
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.SCHEDULER_TF_STATE_BUCKET }}" \
+            -backend-config="key=status-scheduler/terraform.tfstate" \
+            -backend-config="region=${{ vars.SCHEDULER_TF_STATE_REGION }}"
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Apply
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        run: terraform apply -input=false tfplan

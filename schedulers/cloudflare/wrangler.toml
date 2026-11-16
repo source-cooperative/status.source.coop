@@ -1,0 +1,21 @@
+name = "source-status-scheduler"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# This Worker only runs on its cron trigger; expose no URL.
+workers_dev = false
+preview_urls = false
+
+[triggers]
+# Offset by two minutes from the AWS scheduler (minutes 0,5,10,...) so the two
+# interleave, giving a check roughly every 2.5 minutes while both are healthy.
+crons = ["2-59/5 * * * *"]
+
+[vars]
+GITHUB_REPO = "source-cooperative/status.source.coop"
+GITHUB_REF = "master"
+WORKFLOW_FILE = "uptime.yml"
+
+# Set by the deploy workflow (never committed):
+#   GH_APP_CLIENT_ID, GH_APP_INSTALLATION_ID  vars (repo variables GH_APP_ID, GH_APP_INSTALLATION_ID)
+#   GH_APP_PRIVATE_KEY                        secret (repo secret GH_APP_PRIVATE_KEY, converted to PKCS#8)
