@@ -8,6 +8,44 @@
   const DAYS = 90;
   const DAY_MS = 864e5;
 
+  // Theme: the system's until the header toggle sets one, then remembered.
+  // This script runs in <head>, so a saved choice lands before first paint.
+  const root = document.documentElement;
+  const dark = matchMedia("(prefers-color-scheme: dark)");
+  try {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+  } catch {}
+  const theme = () => root.dataset.theme || (dark.matches ? "dark" : "light");
+
+  // Icons from the CLI guide: a moon offers dark, a sun offers light.
+  const MOON =
+    '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  const SUN =
+    '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+
+  function themeButton() {
+    const button = el("button", "sc-theme");
+    button.type = "button";
+    const paint = () => {
+      const isDark = theme() === "dark";
+      button.innerHTML = isDark ? SUN : MOON;
+      button.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
+      button.title = isDark ? "Switch to light" : "Switch to dark";
+      button.setAttribute("aria-pressed", String(isDark));
+    };
+    button.addEventListener("click", () => {
+      root.dataset.theme = theme() === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem("theme", root.dataset.theme);
+      } catch {}
+      paint();
+    });
+    dark.addEventListener("change", paint);
+    paint();
+    return button;
+  }
+
   // raw.githubusercontent.com serves with max-age=300; refetch after that.
   const CACHE_MS = 5 * 60e3;
 
@@ -238,6 +276,7 @@
     if (!name) return;
     name.dataset.sc = "1";
     name.textContent = "Status";
+    document.querySelector("nav .container")?.append(themeButton());
   }
 
   // Footer: credit on the left, what the checks run on the right.

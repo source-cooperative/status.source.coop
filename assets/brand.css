@@ -287,6 +287,29 @@ nav .logo {
 }
 nav ul {
   gap: 6px;
+  margin-left: auto !important;
+}
+.sc-theme {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sc-theme:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.sc-theme:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 nav ul a {
   padding: 6px 10px !important;

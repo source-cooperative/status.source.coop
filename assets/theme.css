@@ -51,12 +51,17 @@
 }
 
 /*
- * Dark follows the system setting, like cli.source.coop. Ink and Bone trade
+ * Dark follows the system setting until the header's toggle sets
+ * data-theme on <html> (brand.js), as on cli.source.coop. Ink and Bone trade
  * places, so every rule here and in brand.css that uses var(--ink) or
  * var(--bone) flips with them. Status colours are lifted a little for contrast.
+ * The two dark blocks hold the same values; keep them in step.
  */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --ink: #efebea;
     --bone: #121a1b;
     --panel: #1b2425;
@@ -68,5 +73,20 @@
     --change-background-color: rgba(217, 160, 50, 0.18);
     --code-background-color: rgba(239, 235, 234, 0.08);
     --logo-filter: invert(1);
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --ink: #efebea;
+  --bone: #121a1b;
+  --panel: #1b2425;
+  --muted: #abafae;
+  --ink-line: rgba(239, 235, 234, 0.18);
+  --warning: #d9a032;
+  --danger: #e5534b;
+  --down-background-color: rgba(229, 83, 75, 0.12);
+  --change-background-color: rgba(217, 160, 50, 0.18);
+  --code-background-color: rgba(239, 235, 234, 0.08);
+  --logo-filter: invert(1);
+  color-scheme: dark;
 }
