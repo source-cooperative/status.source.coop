@@ -269,8 +269,34 @@ section.live-status article.graph > div:not(.sc-mini):not(.sc-num):not(.sc-sub) 
  * panels with 8px corners, and one list of checks instead of separate cards.
  * Status is a dot, not a coloured edge, so the only colour is the state.
  */
+/* Slim header, as on the CLI guide: 12px of padding round a 26px mark, small
+   links on the right. Upptime's own rules are class-hashed, so !important. */
+nav {
+  padding: 0 24px !important;
+  margin-bottom: 2rem !important;
+  font-weight: 400;
+}
+nav .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 0;
+}
+nav .logo {
+  padding: 0 !important;
+  margin-right: 0 !important;
+}
+nav ul {
+  gap: 6px;
+}
+nav ul a {
+  padding: 6px 10px !important;
+  font-size: 14px;
+  border-bottom: 0 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 0.15em;
+}
 nav .logo img {
-  height: 26px;
+  height: 26px !important;
   width: auto;
   margin-right: 14px !important;
   filter: var(--logo-filter);
@@ -362,6 +388,23 @@ section.live-status article.down h4::before {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted);
+}
+
+/* Footer: a rule across the page, credit left, what the checks run on right. */
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-top: 3rem;
+  padding: 16px 24px;
+  border-top: 1px solid var(--ink-line);
+  font-size: 13px;
+  text-align: left;
+  color: var(--muted);
+}
+footer a {
+  color: inherit;
 }
 
 /* The checks: one bordered list, a divider between rows. */
