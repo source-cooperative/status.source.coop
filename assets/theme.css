@@ -47,6 +47,7 @@
   --panel: #f7f5f4;
   --muted: #4a5253;
   --logo-filter: none;
+  --chart-filter: none;
   color-scheme: light dark;
 }
 
@@ -73,6 +74,7 @@
     --change-background-color: rgba(217, 160, 50, 0.18);
     --code-background-color: rgba(239, 235, 234, 0.08);
     --logo-filter: invert(1);
+    --chart-filter: invert(1);
     color-scheme: dark;
   }
 }
@@ -88,5 +90,6 @@
   --change-background-color: rgba(217, 160, 50, 0.18);
   --code-background-color: rgba(239, 235, 234, 0.08);
   --logo-filter: invert(1);
+  --chart-filter: invert(1);
   color-scheme: dark;
 }

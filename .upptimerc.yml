@@ -47,7 +47,8 @@ sites:
     maxResponseTime: 5000
     __dangerous__body_down_if_text_missing: '"issuer"'
 
-# Response-time chart on the history pages: Ink line on a faint Ink fill.
+# Response-time chart on the history pages: Ink line on a faint Ink fill. The
+# canvas is inverted in dark mode (brand.css, --chart-filter in theme.css).
 graphBorderColor: "#121A1B"
 graphBackgroundColor: "rgba(18, 26, 27, 0.08)"
 

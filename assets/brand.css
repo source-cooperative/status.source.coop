@@ -475,3 +475,10 @@ section.live-status article h4 {
 section.live-status article h4 .icon {
   display: none;
 }
+
+/* History pages: the response-time chart is a canvas drawn with a fixed Ink
+   line (graphBorderColor), which vanishes on the dark background. Inverting
+   the canvas in dark turns Ink to Bone and leaves the grey labels readable. */
+main section > canvas {
+  filter: var(--chart-filter, none);
+}
