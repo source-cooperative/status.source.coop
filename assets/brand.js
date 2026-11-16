@@ -226,6 +226,8 @@
     return panel;
   }
 
+  const dropCrumbs = () => document.querySelectorAll(".sc-crumb").forEach((c) => c.remove());
+
   // Upptime's history summary is a <section> holding the site's <h1> and a
   // <dl> of overall uptime and response time; the panel replaces the <dl>.
   async function enhance() {
@@ -249,6 +251,9 @@
     const home = el("a", "", "Status");
     home.href = "/";
     crumb.append(home, ` / ${name}`);
+    // The crumb sits beside the section rather than inside it, so the page's
+    // client-side navigation never clears it: drop the previous one first.
+    dropCrumbs();
     section.before(crumb);
     const url = el("div", "sc-sub", site.url);
     h1.after(url);
@@ -356,6 +361,8 @@
   }
 
   new MutationObserver(() => {
+    // Navigating away from a history page leaves its crumb behind.
+    if (!location.pathname.includes("/history/")) dropCrumbs();
     enhanceBanner();
     enhanceHeader();
     enhanceLabel();

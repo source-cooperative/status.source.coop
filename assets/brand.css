@@ -208,8 +208,9 @@ section.live-status article.graph > div:not(.sc-mini):not(.sc-num):not(.sc-sub) 
 .sc-sub {
   grid-area: sub;
   align-self: start;
-  margin-top: 2px;
-  font-size: 13px;
+  margin-top: 6px;
+  /* URLs are technical text: the monospace face, a size down from body. */
+  font: 12px "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -496,8 +497,8 @@ main section > canvas {
 .sc-crumb a {
   color: inherit;
 }
-main section .sc-sub {
-  margin: -0.25rem 0 0;
+main section > h1 + .sc-sub {
+  margin: 0.25rem 0 0;
 }
 main section > h2 {
   margin-top: 1.75rem;
