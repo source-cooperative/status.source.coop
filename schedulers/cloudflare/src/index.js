@@ -17,6 +17,9 @@ export default {
       repo: env.GITHUB_REPO,
       ref: env.GITHUB_REF,
       workflow: env.WORKFLOW_FILE,
+      // Follower: let the AWS scheduler (no delay) create its run first, then
+      // skip if it did. Waiting is free on Workers (only CPU time is billed).
+      delayMs: 15_000,
     });
   },
 

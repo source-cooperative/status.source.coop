@@ -60,6 +60,16 @@ test("skips the dispatch when a run was created in the last two minutes", async 
   assert.match(decodeURIComponent(calls[1]), /runs\?per_page=1&created=>=\d{4}-\d\d-\d\dT[\d:]+Z$/);
 });
 
+test("delayMs waits before the recent-runs check, so a sibling's run can appear first", async () => {
+  const times = [];
+  await run({ ...cfg, delayMs: 50 }, async () => {
+    times.push(Date.now());
+    if (times.length === 1) return res(201, JSON.stringify({ token: "t" }));
+    return res(200, JSON.stringify({ total_count: 1 }));
+  });
+  assert.ok(times[1] - times[0] >= 45, `lookup came ${times[1] - times[0]}ms after the token call`);
+});
+
 test("fails open: dispatches anyway if the recent-runs lookup errors", async () => {
   let n = 0;
   const outcome = await run(cfg, async () => {
