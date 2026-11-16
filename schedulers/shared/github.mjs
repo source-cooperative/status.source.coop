@@ -100,8 +100,13 @@ export async function recentRunExists({ token, repo, workflow, windowSeconds = 1
 
 // Mint a token, then dispatch unless a sibling already did. `cfg` holds the App
 // credentials plus repo/ref/workflow. Returns "dispatched" or "skipped".
+//
+// `cfg.delayMs` makes one scheduler the follower: it waits before checking so
+// the other's run already exists. Without a gap both check at the same instant,
+// both find nothing, and both dispatch.
 export async function run(cfg, fetchImpl = fetch) {
   const token = await mintInstallationToken(cfg, fetchImpl);
+  if (cfg.delayMs) await new Promise((r) => setTimeout(r, cfg.delayMs));
   if (await recentRunExists({ ...cfg, token }, fetchImpl)) return "skipped";
   await dispatchWorkflow({ ...cfg, token }, fetchImpl);
   return "dispatched";
