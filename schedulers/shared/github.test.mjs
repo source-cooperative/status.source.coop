@@ -19,12 +19,15 @@ const res = (status, body = "") => new Response(body || null, { status });
 
 test("mints a narrowed token with a verifiable RS256 JWT, then dispatches with it", async () => {
   const calls = [];
-  await run(cfg, async (url, init) => {
+  const outcome = await run(cfg, async (url, init) => {
     calls.push({ url, init });
-    return calls.length === 1 ? res(201, JSON.stringify({ token: "inst-token" })) : res(204);
+    if (calls.length === 1) return res(201, JSON.stringify({ token: "inst-token" }));
+    if (calls.length === 2) return res(200, JSON.stringify({ total_count: 0 }));
+    return res(204);
   });
+  assert.equal(outcome, "dispatched");
 
-  const [mint, dispatch] = calls;
+  const [mint, , dispatch] = calls;
   assert.equal(mint.url, "https://api.github.com/app/installations/123/access_tokens");
   assert.deepEqual(JSON.parse(mint.init.body), {
     repositories: ["status.source.coop"],
@@ -43,6 +46,29 @@ test("mints a narrowed token with a verifiable RS256 JWT, then dispatches with i
   );
   assert.equal(dispatch.init.headers.Authorization, "Bearer inst-token");
   assert.deepEqual(JSON.parse(dispatch.init.body), { ref: "master" });
+});
+
+test("skips the dispatch when a run was created in the last two minutes", async () => {
+  const calls = [];
+  const outcome = await run(cfg, async (url) => {
+    calls.push(url);
+    if (calls.length === 1) return res(201, JSON.stringify({ token: "inst-token" }));
+    return res(200, JSON.stringify({ total_count: 1 }));
+  });
+  assert.equal(outcome, "skipped");
+  assert.equal(calls.length, 2, "no dispatch call was made");
+  assert.match(decodeURIComponent(calls[1]), /runs\?per_page=1&created=>=\d{4}-\d\d-\d\dT[\d:]+Z$/);
+});
+
+test("fails open: dispatches anyway if the recent-runs lookup errors", async () => {
+  let n = 0;
+  const outcome = await run(cfg, async () => {
+    n++;
+    if (n === 1) return res(201, JSON.stringify({ token: "t" }));
+    if (n === 2) return res(500);
+    return res(204);
+  });
+  assert.equal(outcome, "dispatched");
 });
 
 test("rejects a PKCS#1 key with a helpful message", async () => {

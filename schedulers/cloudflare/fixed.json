@@ -1,0 +1,96 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EventBridge",
+            "Effect": "Allow",
+            "Action": [
+                "events:PutRule",
+                "events:DeleteRule",
+                "events:DescribeRule",
+                "events:EnableRule",
+                "events:DisableRule",
+                "events:PutTargets",
+                "events:RemoveTargets",
+                "events:ListTargetsByRule",
+                "events:TagResource",
+                "events:UntagResource",
+                "events:ListTagsForResource",
+                "events:CreateConnection",
+                "events:UpdateConnection",
+                "events:DeleteConnection",
+                "events:DescribeConnection",
+                "events:CreateApiDestination",
+                "events:UpdateApiDestination",
+                "events:DeleteApiDestination",
+                "events:DescribeApiDestination"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ConnectionSecret",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:CreateSecret",
+                "secretsmanager:DeleteSecret",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:PutSecretValue",
+                "secretsmanager:UpdateSecret",
+                "secretsmanager:TagResource"
+            ],
+            "Resource": "arn:aws:secretsmanager:*:417712557820:secret:events!connection/source-status-scheduler/*"
+        },
+        {
+            "Sid": "SchedulerRole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:UpdateAssumeRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListInstanceProfilesForRole",
+                "iam:TagRole",
+                "iam:UntagRole"
+            ],
+            "Resource": "arn:aws:iam::417712557820:role/source-status-scheduler"
+        },
+        {
+            "Sid": "FailedQueue",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:CreateQueue",
+                "sqs:DeleteQueue",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "sqs:ListQueueTags",
+                "sqs:TagQueue",
+                "sqs:UntagQueue"
+            ],
+            "Resource": "arn:aws:sqs:*:417712557820:source-status-scheduler-failed"
+        },
+        {
+            "Sid": "StateList",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::status.source.coop-tfstate"
+        },
+        {
+            "Sid": "StateObject",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::status.source.coop-tfstate/status-scheduler/*"
+        }
+    ]
+}
