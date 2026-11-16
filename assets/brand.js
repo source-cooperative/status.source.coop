@@ -240,6 +240,24 @@
     name.textContent = "Status";
   }
 
+  // Footer: credit on the left, what the checks run on the right.
+  function enhanceFooter() {
+    const footer = document.querySelector("footer:not([data-sc])");
+    if (!footer) return;
+    footer.dataset.sc = "1";
+    const link = (text, href) => Object.assign(el("a", "", text), { href });
+    const left = el("span", "", "Source Cooperative · ");
+    left.append(
+      link("open source", "https://github.com/source-cooperative/status.source.coop"),
+      " · powered by ",
+      link("Upptime", "https://upptime.js.org"),
+    );
+    footer.replaceChildren(
+      left,
+      el("span", "", "Checks: GitHub Actions, outside Cloudflare, Vercel and AWS"),
+    );
+  }
+
   // Section label for the list; the 24h/7d/30d filter only changed the text
   // Upptime's cards show, which the rows replace.
   function enhanceLabel() {
@@ -253,6 +271,7 @@
     enhanceBanner();
     enhanceHeader();
     enhanceLabel();
+    enhanceFooter();
     enhanceIndex();
     enhance().catch(() => {});
   }).observe(document.documentElement, {
