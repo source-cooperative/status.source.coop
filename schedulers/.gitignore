@@ -3,3 +3,4 @@ node_modules/
 .terraform/
 *.tfstate*
 tfplan
+lambda.zip

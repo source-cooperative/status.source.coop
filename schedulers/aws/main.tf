@@ -4,7 +4,8 @@
 # 30-60 minutes. A workflow_dispatch from an external scheduler runs promptly.
 # See ../README.md for why this exists next to the Cloudflare scheduler.
 #
-# No Lambda: an EventBridge API destination POSTs to the GitHub API directly.
+# EventBridge invokes a small Lambda that mints a GitHub App installation token
+# and dispatches the workflow (see lambda/ and ../shared/github.mjs).
 
 terraform {
   required_version = ">= 1.6"
@@ -13,6 +14,10 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
     }
   }
 
@@ -52,34 +57,24 @@ variable "schedule_expression" {
   default     = "cron(0/5 * * * ? *)"
 }
 
-variable "dispatch_token" {
-  description = "Fine-grained PAT for this repo only, Actions: read and write."
+variable "app_client_id" {
+  description = "Client ID of the GitHub App that dispatches the workflow (Actions: write)."
+  type        = string
+}
+
+variable "app_installation_id" {
+  description = "Installation ID of that App on the repository."
+  type        = string
+}
+
+variable "app_private_key" {
+  description = "The App's private key, PKCS#8 PEM (openssl pkcs8 -topk8 -nocrypt)."
   type        = string
   sensitive   = true
 }
 
 locals {
   name = "source-status-scheduler"
-}
-
-resource "aws_cloudwatch_event_connection" "github" {
-  name               = local.name
-  authorization_type = "API_KEY"
-
-  auth_parameters {
-    api_key {
-      key   = "Authorization"
-      value = "Bearer ${var.dispatch_token}"
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_api_destination" "dispatch" {
-  name                             = local.name
-  connection_arn                   = aws_cloudwatch_event_connection.github.arn
-  invocation_endpoint              = "https://api.github.com/repos/${var.github_repo}/actions/workflows/${var.workflow_file}/dispatches"
-  http_method                      = "POST"
-  invocation_rate_limit_per_second = 1
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {
@@ -96,8 +91,8 @@ resource "aws_sqs_queue" "failed" {
   sqs_managed_sse_enabled   = true
 }
 
-data "aws_caller_identity" "current" {}
-
+# EventBridge writes undeliverable events here; the Lambda role (below) writes
+# failed invocations via its own policy.
 resource "aws_sqs_queue_policy" "failed" {
   queue_url = aws_sqs_queue.failed.id
   policy = jsonencode({
@@ -112,46 +107,118 @@ resource "aws_sqs_queue_policy" "failed" {
   })
 }
 
-resource "aws_iam_role" "events" {
+resource "aws_secretsmanager_secret" "app_key" {
+  name                    = "${local.name}/github-app-key"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "app_key" {
+  secret_id     = aws_secretsmanager_secret.app_key.id
+  secret_string = var.app_private_key
+}
+
+resource "aws_iam_role" "lambda" {
   name = local.name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { Service = "events.amazonaws.com" }
+      Principal = { Service = "lambda.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id } }
     }]
   })
 }
 
-resource "aws_iam_role_policy" "invoke" {
-  name = "invoke-api-destination"
-  role = aws_iam_role.events.id
+resource "aws_iam_role_policy" "lambda" {
+  name = "run"
+  role = aws_iam_role.lambda.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = "events:InvokeApiDestination"
-      Resource = aws_cloudwatch_event_api_destination.dispatch.arn
-    }]
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "secretsmanager:GetSecretValue"
+        Resource = aws_secretsmanager_secret.app_key.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = "sqs:SendMessage"
+        Resource = aws_sqs_queue.failed.arn
+      },
+    ]
   })
+}
+
+data "archive_file" "lambda" {
+  type        = "zip"
+  output_path = "${path.module}/lambda.zip"
+
+  source {
+    content  = file("${path.module}/lambda/index.mjs")
+    filename = "index.mjs"
+  }
+  # Shared with the Cloudflare Worker.
+  source {
+    content  = file("${path.module}/../shared/github.mjs")
+    filename = "github.mjs"
+  }
+}
+
+resource "aws_lambda_function" "dispatch" {
+  function_name    = local.name
+  role             = aws_iam_role.lambda.arn
+  runtime          = "nodejs22.x"
+  handler          = "index.handler"
+  filename         = data.archive_file.lambda.output_path
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+  timeout          = 30
+
+  environment {
+    variables = {
+      KEY_SECRET_ARN         = aws_secretsmanager_secret.app_key.arn
+      GH_APP_CLIENT_ID       = var.app_client_id
+      GH_APP_INSTALLATION_ID = var.app_installation_id
+      GITHUB_REPO            = var.github_repo
+      GITHUB_REF             = var.github_ref
+      WORKFLOW_FILE          = var.workflow_file
+    }
+  }
+
+  # The secret value must exist before the first invocation.
+  depends_on = [aws_secretsmanager_secret_version.app_key, aws_iam_role_policy.lambda]
+}
+
+# A dispatch that still fails after Lambda's retries (bad key, GitHub outage)
+# lands in the failed queue, so it leaves evidence instead of failing silently.
+resource "aws_lambda_function_event_invoke_config" "dispatch" {
+  function_name          = aws_lambda_function.dispatch.function_name
+  maximum_retry_attempts = 2
+
+  destination_config {
+    on_failure {
+      destination = aws_sqs_queue.failed.arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.lambda]
+}
+
+resource "aws_lambda_permission" "events" {
+  statement_id  = "AllowEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.dispatch.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.schedule.arn
 }
 
 resource "aws_cloudwatch_event_target" "dispatch" {
-  rule     = aws_cloudwatch_event_rule.schedule.name
-  arn      = aws_cloudwatch_event_api_destination.dispatch.arn
-  role_arn = aws_iam_role.events.arn
-  input    = jsonencode({ ref = var.github_ref })
-
-  http_target {
-    header_parameters = {
-      Accept                 = "application/vnd.github+json"
-      "Content-Type"         = "application/json"
-      "User-Agent"           = "source-cooperative-status-scheduler"
-      "X-GitHub-Api-Version" = "2022-11-28"
-    }
-  }
+  rule = aws_cloudwatch_event_rule.schedule.name
+  arn  = aws_lambda_function.dispatch.arn
 
   retry_policy {
     maximum_retry_attempts       = 2
@@ -162,7 +229,7 @@ resource "aws_cloudwatch_event_target" "dispatch" {
     arn = aws_sqs_queue.failed.arn
   }
 
-  depends_on = [aws_iam_role_policy.invoke]
+  depends_on = [aws_lambda_permission.events]
 }
 
 output "rule_name" {

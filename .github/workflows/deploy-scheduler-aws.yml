@@ -7,10 +7,12 @@ on:
     branches: [master]
     paths:
       - "schedulers/aws/**"
+      - "schedulers/shared/**"
       - ".github/workflows/deploy-scheduler-aws.yml"
   pull_request:
     paths:
       - "schedulers/aws/**"
+      - "schedulers/shared/**"
       - ".github/workflows/deploy-scheduler-aws.yml"
   workflow_dispatch:
 
@@ -34,10 +36,21 @@ jobs:
     # Fork PRs have no access to secrets or the AWS role.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     env:
-      TF_VAR_dispatch_token: ${{ secrets.SCHEDULER_TOKEN_AWS }}
+      TF_VAR_app_client_id: ${{ vars.GH_APP_ID }}
+      TF_VAR_app_installation_id: ${{ vars.GH_APP_INSTALLATION_ID }}
       TF_IN_AUTOMATION: "true"
     steps:
       - uses: actions/checkout@v4
+
+      # GitHub issues PKCS#1 keys; the Lambda's Web Crypto needs PKCS#8.
+      - name: Prepare App key
+        run: |
+          printf '%s' "$GH_APP_PRIVATE_KEY" | openssl pkcs8 -topk8 -nocrypt > "$RUNNER_TEMP/app.pem"
+          echo "TF_VAR_app_private_key<<EOF_KEY" >> "$GITHUB_ENV"
+          cat "$RUNNER_TEMP/app.pem" >> "$GITHUB_ENV"
+          echo "EOF_KEY" >> "$GITHUB_ENV"
+        env:
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - uses: hashicorp/setup-terraform@v3
         with:

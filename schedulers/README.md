@@ -6,7 +6,7 @@ Upptime's recommended fix is an external scheduler that calls the GitHub `workfl
 
 | Directory | Provider | Fires at minutes | Deployed with |
 | --- | --- | --- | --- |
-| `schedulers/aws` | EventBridge rule, API destination (no Lambda) | 0, 5, 10, … | Terraform |
+| `schedulers/aws` | EventBridge rule → Lambda | 0, 5, 10, … | Terraform |
 | `schedulers/cloudflare` | Worker cron trigger | 2, 7, 12, … | Wrangler |
 
 While both are healthy a check starts about every 2.5 minutes. Extra dispatches are harmless: the Upptime workflow serialises runs (a concurrency group with `cancel-in-progress: false`; at most one waits, extras are dropped), and Actions minutes are free on public repos.
@@ -24,20 +24,24 @@ Both also have `workflow_dispatch` for a manual run.
 
 ## One-time setup
 
-### Dispatch tokens
+### GitHub App
 
-Create one fine-grained personal access token per provider, so one leaking or expiring breaks only one trigger. Scope each to this repository only, with **Actions: read and write**. Set an expiry and put the date in a calendar: an expired token fails silently from the status page's point of view. The deploy workflows only run when their directory changes, so after rotating a token secret, re-run the matching workflow with `workflow_dispatch` on `master` to push it out.
+Both schedulers authenticate as the repo's existing GitHub App (repo variable `GH_APP_ID` is its client ID, secret `GH_APP_PRIVATE_KEY` its key). It needs **Actions: write** on this repository, which it already has. There is no PAT and nothing to rotate: each run signs a short-lived JWT with the key and exchanges it for an installation token narrowed to Actions: write on this repo (`schedulers/shared/github.mjs`).
 
-Repository **secrets**: `SCHEDULER_TOKEN_AWS`, `SCHEDULER_TOKEN_CLOUDFLARE`.
+Add one repository **variable**: `GH_APP_INSTALLATION_ID` (the number at the end of the App's installation URL, `github.com/organizations/source-cooperative/settings/installations/<id>`).
+
+The deploy workflows convert the key to PKCS#8 with `openssl pkcs8 -topk8 -nocrypt` (Web Crypto cannot read GitHub's PKCS#1 format). They run only when their directory, `schedulers/shared`, or their workflow file changes, so after rotating `GH_APP_PRIVATE_KEY` re-run both with `workflow_dispatch` on `master`.
+
+The key is stored in Worker secrets and in AWS Secrets Manager (and so in the Terraform state). The App can also push code and edit workflows, so treat both as sensitive.
 
 ### AWS
 
 - An S3 bucket for Terraform state (versioned, encrypted). The state holds the dispatch token, so restrict access to it.
-- An IAM role that GitHub Actions can assume through OIDC for this repo, allowed to manage EventBridge rules, connections and API destinations, IAM roles, SQS queues and the state bucket.
+- An IAM role that GitHub Actions can assume through OIDC for this repo, allowed to manage EventBridge rules, Lambda functions, Secrets Manager secrets, IAM roles, SQS queues and the state bucket.
 
 Repository **variables**: `SCHEDULER_AWS_ROLE_ARN`, `SCHEDULER_TF_STATE_BUCKET`, `SCHEDULER_TF_STATE_REGION`.
 
-Delivery failures after retries go to the `source-status-scheduler-failed` SQS queue (`terraform output failed_events_queue_url`). Messages there mean a dispatch did not reach GitHub.
+Delivery failures after retries go to the `source-status-scheduler-failed` SQS queue (`terraform output failed_events_queue_url`). Messages there mean a dispatch did not reach GitHub (bad key, GitHub outage).
 
 ### Cloudflare
 
@@ -45,7 +49,7 @@ An API token with **Workers Scripts: Edit** for the account.
 
 Repository **secret**: `CLOUDFLARE_API_TOKEN`. Repository **variable**: `CLOUDFLARE_ACCOUNT_ID`.
 
-The deploy step also writes `SCHEDULER_TOKEN_CLOUDFLARE` into the Worker as its `DISPATCH_TOKEN` secret. Failed dispatches show up as failed cron invocations in the Workers dashboard.
+The deploy step also writes the App key into the Worker as its `GH_APP_PRIVATE_KEY` secret. Failed dispatches show up as failed cron invocations in the Workers dashboard.
 
 ## Local checks
 

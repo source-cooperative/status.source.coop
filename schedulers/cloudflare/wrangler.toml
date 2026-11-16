@@ -16,5 +16,6 @@ GITHUB_REPO = "source-cooperative/status.source.coop"
 GITHUB_REF = "master"
 WORKFLOW_FILE = "uptime.yml"
 
-# Secret, set by the deploy workflow (never committed):
-#   DISPATCH_TOKEN  fine-grained PAT, this repo only, Actions: read and write
+# Set by the deploy workflow (never committed):
+#   GH_APP_CLIENT_ID, GH_APP_INSTALLATION_ID  vars (repo variables GH_APP_ID, GH_APP_INSTALLATION_ID)
+#   GH_APP_PRIVATE_KEY                        secret (repo secret GH_APP_PRIVATE_KEY, converted to PKCS#8)
