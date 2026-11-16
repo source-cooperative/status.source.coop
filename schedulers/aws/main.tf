@@ -52,7 +52,7 @@ variable "workflow_file" {
 }
 
 variable "schedule_expression" {
-  description = "Minutes 0,5,10,... The Cloudflare scheduler runs at 2,7,12,... so the two interleave."
+  description = "Minutes 0,5,10,... The Cloudflare scheduler uses the same ticks; the second to fire skips."
   type        = string
   default     = "cron(0/5 * * * ? *)"
 }

@@ -7,9 +7,9 @@ workers_dev = false
 preview_urls = false
 
 [triggers]
-# Offset by two minutes from the AWS scheduler (minutes 0,5,10,...) so the two
-# interleave, giving a check roughly every 2.5 minutes while both are healthy.
-crons = ["2-59/5 * * * *"]
+# Same ticks as the AWS scheduler. Whichever fires second sees the run its
+# sibling just created and skips its dispatch (schedulers/shared/github.mjs).
+crons = ["*/5 * * * *"]
 
 [vars]
 GITHUB_REPO = "source-cooperative/status.source.coop"

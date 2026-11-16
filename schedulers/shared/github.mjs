@@ -82,8 +82,27 @@ export async function dispatchWorkflow({ token, repo, ref, workflow }, fetchImpl
   }
 }
 
-// Mint a token, then dispatch. `cfg` holds the App credentials plus repo/ref/workflow.
+// True if the workflow already has a run created in the last `windowSeconds`
+// (queued, running or finished). Both schedulers fire on the same ticks, so
+// whichever gets here second sees its sibling's run and stands down.
+export async function recentRunExists({ token, repo, workflow, windowSeconds = 120 }, fetchImpl = fetch) {
+  const since = new Date(Date.now() - windowSeconds * 1000).toISOString().replace(/\.\d+Z$/, "Z");
+  const res = await fetchImpl(
+    `${API}/repos/${repo}/actions/workflows/${workflow}/runs?per_page=1&created=${encodeURIComponent(`>=${since}`)}`,
+    { headers: { ...HEADERS, Authorization: `Bearer ${token}` } },
+  );
+  if (res.status !== 200) {
+    // Fail open: a duplicate run is harmless, a missed one is not.
+    return false;
+  }
+  return (await res.json()).total_count > 0;
+}
+
+// Mint a token, then dispatch unless a sibling already did. `cfg` holds the App
+// credentials plus repo/ref/workflow. Returns "dispatched" or "skipped".
 export async function run(cfg, fetchImpl = fetch) {
   const token = await mintInstallationToken(cfg, fetchImpl);
+  if (await recentRunExists({ ...cfg, token }, fetchImpl)) return "skipped";
   await dispatchWorkflow({ ...cfg, token }, fetchImpl);
+  return "dispatched";
 }
