@@ -390,6 +390,22 @@ section.live-status article.down h4::before {
   color: var(--muted);
 }
 
+/* Short pages still reach the viewport's height, so the footer sits at the
+   bottom. Upptime pads the body's bottom, which would leave a gap under it. */
+body {
+  padding-bottom: 0;
+}
+#sapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+#sapper > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
 /* Footer: a rule across the page, credit left, what the checks run on right. */
 footer {
   display: flex;
