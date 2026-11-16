@@ -70,6 +70,11 @@ status-website:
       href: https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap
     - rel: stylesheet
       href: https://status.source.coop/brand.css
+    # The same icons source.coop links: favicon.ico above, a 16px PNG, and the
+    # touch icon. logo-192.png and logo-512.png are the icons Upptime's web
+    # manifest names; they replace Upptime's own logos.
+    - rel: shortcut icon
+      href: https://status.source.coop/favicon-16x16.png
     - rel: apple-touch-icon
       href: https://status.source.coop/apple-touch-icon.png
   # Daily-uptime panel on each history page, like the source.coop analytics card.
